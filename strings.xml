@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">BB10 Hub Lawnchair</string>
+    <string name="hub_title">Hub</string>
+    <string name="hub_notifications_count">%d notifications</string>
+    <string name="hub_no_notifications">No notifications</string>
+    <string name="action_mark_read">Mark Read</string>
+    <string name="action_snooze">Snooze</string>
+    <string name="action_dismiss">Dismiss</string>
+    <string name="notification_service_name">BB10 Notification Listener</string>
+    <string name="notification_service_description">Listens to system notifications for BB10 Hub</string>
+    <string name="close_hub">Close Hub</string>
+    <string name="time_now">now</string>
+    <string name="time_minutes_ago">%dm ago</string>
+    <string name="time_hours_ago">%dh ago</string>
+    <string name="time_days_ago">%dd ago</string>
+</resources>

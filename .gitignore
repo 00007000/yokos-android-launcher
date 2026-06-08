@@ -1,0 +1,55 @@
+# Gradle
+.gradle/
+build/
+**/build/
+.gradle
+
+# IDE
+.idea/
+*.iml
+*.iws
+*.ipr
+.DS_Store
+
+# Android Studio
+local.properties
+*.jks
+*.keystore
+!debug.keystore
+
+# Build
+bin/
+gen/
+out/
+
+# APKs
+*.apk
+*.ap_
+
+# Crash logs
+*.log
+crash_log
+
+# Node
+node_modules/
+
+# Environment
+.env
+.env.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Kotlin
+*.kotlin_module
+
+# Runtime
+.classpath
+.project
+.settings/
+
+# General
+.vscode/
+*.swp
+*~

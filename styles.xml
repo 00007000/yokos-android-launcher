@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Light Theme -->
+    <style name="Theme.BB10Hub" parent="android:Theme.Material.Light">
+        <item name="android:colorPrimary">@color/md3_primary</item>
+        <item name="android:colorPrimaryDark">@color/md3_primary</item>
+        <item name="android:colorAccent">@color/md3_secondary</item>
+        <item name="android:windowBackground">@color/md3_background</item>
+        <item name="android:windowLightStatusBar">true</item>
+    </style>
+
+    <!-- Dark Theme -->
+    <style name="Theme.BB10Hub.Dark" parent="android:Theme.Material">
+        <item name="android:colorPrimary">@color/md3_primary_dark</item>
+        <item name="android:colorPrimaryDark">@color/md3_primary_dark</item>
+        <item name="android:colorAccent">@color/md3_secondary_dark</item>
+        <item name="android:windowBackground">@color/md3_background_dark</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+
+    <!-- BB10 Hub Overlay Theme -->
+    <style name="Theme.BB10HubOverlay" parent="android:Theme.Translucent.NoTitleBar">
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowAnimationStyle">@style/BB10HubAnimation</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowActionBar">false</item>
+        <item name="android:windowFullscreen">false</item>
+    </style>
+
+    <!-- BB10 Hub Animation Style (Springy) -->
+    <style name="BB10HubAnimation">
+        <item name="android:activityOpenEnterAnimation">@anim/hub_enter</item>
+        <item name="android:activityOpenExitAnimation">@anim/hub_exit</item>
+        <item name="android:activityCloseEnterAnimation">@anim/hub_close_enter</item>
+        <item name="android:activityCloseExitAnimation">@anim/hub_close_exit</item>
+    </style>
+</resources>
