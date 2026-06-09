@@ -2,7 +2,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="app.lawnchair.debug">
 
-    <!-- Required Permissions -->
     <uses-permission android:name="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
@@ -13,30 +12,16 @@
         android:label="@string/app_name"
         android:theme="@style/Theme.BB10Hub">
 
-        <!-- Main Launcher Activity (if standalone) -->
-        <activity
-            android:name=".LauncherActivity"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-                <category android:name="android.intent.category.HOME" />
-                <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>
-        </activity>
-
-        <!-- BB10 Hub Activity -->
         <activity
             android:name="app.lawnchair.bb10hub.Bb10HubActivity"
             android:exported="true"
-            android:theme="@style/Theme.BB10HubOverlay"
-            android:launchMode="singleTask">
+            android:theme="@style/Theme.BB10HubOverlay">
             <intent-filter>
-                <action android:name="app.lawnchair.ACTION_OPEN_BB10_HUB" />
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
-        <!-- Notification Listener Service -->
         <service
             android:name="app.lawnchair.bb10hub.HubNotificationService"
             android:enabled="true"
