@@ -36,10 +36,6 @@ class HubNotificationService : NotificationListenerService() {
         notifications.removeAll { it.id == notificationId }
     }
     
-    override fun onSnoozeNotification(notificationId: String, duration: Long) {
-        super.onSnoozeNotification(notificationId, duration)
-    }
-    
     fun getNotificationsSorted(): List<NotificationItem> {
         return notifications.sortedByDescending { it.timestamp }
     }
