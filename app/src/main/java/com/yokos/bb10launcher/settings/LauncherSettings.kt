@@ -30,8 +30,31 @@ class LauncherSettings(context: Context) {
         store.edit { it[HUB_READ] = keys }
     }
 
+    /** When the user last closed each Active Frame, by package. */
+    val closedFrames: Flow<Map<String, Long>> = store.data.map { prefs ->
+        prefs[CLOSED_FRAMES].orEmpty().mapNotNull { entry ->
+            val pkg = entry.substringBeforeLast('=')
+            entry.substringAfterLast('=').toLongOrNull()?.let { pkg to it }
+        }.toMap()
+    }
+
+    suspend fun setClosedFrames(closed: Map<String, Long>) {
+        store.edit { prefs -> prefs[CLOSED_FRAMES] = closed.mapTo(HashSet()) { (pkg, time) -> "$pkg=$time" } }
+    }
+
+    /** App widget ids pinned as live frames, in display order. */
+    val widgetFrames: Flow<List<Int>> = store.data.map { prefs ->
+        prefs[WIDGET_FRAMES]?.split(',')?.mapNotNull { it.toIntOrNull() }.orEmpty()
+    }
+
+    suspend fun setWidgetFrames(ids: List<Int>) {
+        store.edit { it[WIDGET_FRAMES] = ids.joinToString(",") }
+    }
+
     private companion object {
         val APP_ORDER = stringPreferencesKey("app_order")
         val HUB_READ = stringSetPreferencesKey("hub_read")
+        val CLOSED_FRAMES = stringSetPreferencesKey("closed_frames")
+        val WIDGET_FRAMES = stringPreferencesKey("widget_frames")
     }
 }

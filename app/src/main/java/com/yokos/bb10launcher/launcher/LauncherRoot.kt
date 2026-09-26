@@ -56,9 +56,11 @@ import com.yokos.bb10launcher.apps.AppActionsDialog
 import com.yokos.bb10launcher.apps.AppEntry
 import com.yokos.bb10launcher.apps.AppGridPage
 import com.yokos.bb10launcher.apps.AppOrdering
+import com.yokos.bb10launcher.frames.ActiveFramesScreen
 import com.yokos.bb10launcher.hub.ui.HubRow
 import com.yokos.bb10launcher.hub.ui.HubScreen
 import com.yokos.bb10launcher.onboarding.Permissions
+import com.yokos.bb10launcher.onboarding.SetupScreen
 import com.yokos.bb10launcher.ui.theme.Bb10Colors
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
@@ -74,6 +76,9 @@ fun LauncherRoot(commands: Flow<HomeCommand>, viewModel: LauncherViewModel) {
     val apps by viewModel.apps.collectAsStateWithLifecycle()
     val hubState by viewModel.hub.state.collectAsStateWithLifecycle()
     val setup by viewModel.setup.collectAsStateWithLifecycle()
+    val frames by viewModel.frames.collectAsStateWithLifecycle()
+    val widgetIds by viewModel.widgetFrames.collectAsStateWithLifecycle()
+    val labels = remember(apps) { apps.associate { it.packageName to it.label } }
     val appPages = remember(apps) { AppOrdering.pages(apps) }
     val pagerState = rememberPagerState(initialPage = FRAMES_PAGE) { FIRST_APP_PAGE + appPages.size }
     val scope = rememberCoroutineScope()
@@ -81,10 +86,12 @@ fun LauncherRoot(commands: Flow<HomeCommand>, viewModel: LauncherViewModel) {
     var searchOpen by rememberSaveable { mutableStateOf(false) }
     var editMode by remember { mutableStateOf(false) }
     var menuApp by remember { mutableStateOf<AppEntry?>(null) }
+    var setupOpen by rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(commands) {
         commands.collect { command ->
             searchOpen = false
+            setupOpen = false
             editMode = false
             menuApp = null
             val target = if (command == HomeCommand.OpenHub) HUB_PAGE else FRAMES_PAGE
@@ -92,8 +99,9 @@ fun LauncherRoot(commands: Flow<HomeCommand>, viewModel: LauncherViewModel) {
         }
     }
 
-    BackHandler(enabled = searchOpen || editMode || pagerState.currentPage != FRAMES_PAGE) {
+    BackHandler(enabled = searchOpen || setupOpen || editMode || pagerState.currentPage != FRAMES_PAGE) {
         when {
+            setupOpen -> setupOpen = false
             searchOpen -> searchOpen = false
             editMode -> editMode = false
             else -> scope.launch { pagerState.animateScrollToPage(FRAMES_PAGE) }
@@ -119,7 +127,19 @@ fun LauncherRoot(commands: Flow<HomeCommand>, viewModel: LauncherViewModel) {
                         onGrantAccess = { context.startSafely(Permissions.notificationAccessIntent(context)) },
                         hiddenFraction = { pagerState.hiddenFraction(HUB_PAGE) },
                     )
-                    FRAMES_PAGE -> FramesPagePlaceholder()
+                    FRAMES_PAGE -> ActiveFramesScreen(
+                        frames = frames,
+                        labels = labels,
+                        widgetIds = widgetIds,
+                        widgets = viewModel.widgets,
+                        setup = setup,
+                        onOpenFrame = { viewModel.launchPackage(it) },
+                        onCloseFrame = viewModel::closeFrame,
+                        onAddWidget = viewModel::addWidgetFrame,
+                        onRemoveWidget = viewModel::removeWidgetFrame,
+                        onOpenSetup = { setupOpen = true },
+                        onGrantUsage = { context.startSafely(Permissions.usageAccessIntent(context)) },
+                    )
                     else -> {
                         val pageIndex = page - FIRST_APP_PAGE
                         AppGridPage(
@@ -171,6 +191,10 @@ fun LauncherRoot(commands: Flow<HomeCommand>, viewModel: LauncherViewModel) {
         }
     }
 
+    if (setupOpen) {
+        SetupScreen(status = setup, onClose = { setupOpen = false })
+    }
+
     menuApp?.let { app ->
         AppActionsDialog(
             app = app,
@@ -178,13 +202,6 @@ fun LauncherRoot(commands: Flow<HomeCommand>, viewModel: LauncherViewModel) {
             onAppInfo = { viewModel.openAppInfo(app) },
             onUninstall = { viewModel.uninstall(app) },
         )
-    }
-}
-
-@Composable
-private fun FramesPagePlaceholder() {
-    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Text(stringResource(R.string.frames_empty), color = Bb10Colors.TextDim)
     }
 }
 

@@ -19,6 +19,7 @@ enum class HomeCommand { GoHome, OpenHub }
 class LauncherActivity : ComponentActivity() {
     private val viewModel: LauncherViewModel by viewModels()
     private val commands = Channel<HomeCommand>(Channel.CONFLATED)
+    private val commandFlow = commands.receiveAsFlow()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge(
@@ -28,7 +29,7 @@ class LauncherActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             Bb10Theme {
-                LauncherRoot(commands = commands.receiveAsFlow(), viewModel = viewModel)
+                LauncherRoot(commands = commandFlow, viewModel = viewModel)
             }
         }
         handleIntent(intent, fromNewIntent = false)
@@ -37,6 +38,16 @@ class LauncherActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         handleIntent(intent, fromNewIntent = true)
+    }
+
+    override fun onStart() {
+        super.onStart()
+        viewModel.widgets.host.startListening()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        viewModel.widgets.host.stopListening()
     }
 
     override fun onResume() {

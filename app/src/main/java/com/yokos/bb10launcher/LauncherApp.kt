@@ -3,6 +3,8 @@ package com.yokos.bb10launcher
 import android.app.Application
 import android.content.Context
 import com.yokos.bb10launcher.apps.AppRepository
+import com.yokos.bb10launcher.frames.FrameWidgetHost
+import com.yokos.bb10launcher.frames.RecentAppsSource
 import com.yokos.bb10launcher.hub.HubRepository
 import com.yokos.bb10launcher.settings.LauncherSettings
 import com.yokos.bb10launcher.util.IconLoader
@@ -21,6 +23,8 @@ class LauncherApp : Application() {
     val icons by lazy { IconLoader(this) }
     val apps by lazy { AppRepository(this, settings, appScope) }
     val hub = HubRepository()
+    val recentApps by lazy { RecentAppsSource(this) }
+    val widgets by lazy { FrameWidgetHost(this) }
 
     override fun onCreate() {
         super.onCreate()
