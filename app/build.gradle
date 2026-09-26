@@ -74,6 +74,8 @@ android {
     lint {
         abortOnError true
         checkReleaseBuilds false
+        textReport true
+        textOutput file('stdout')
         disable 'GradleDependency', 'NewerVersionAvailable', 'AndroidGradlePluginVersion', 'OldTargetApi'
     }
 }
