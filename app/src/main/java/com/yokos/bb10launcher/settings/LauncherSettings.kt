@@ -3,6 +3,7 @@ package com.yokos.bb10launcher.settings
 import android.content.Context
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -22,7 +23,15 @@ class LauncherSettings(context: Context) {
         store.edit { it[APP_ORDER] = keys.joinToString("\n") }
     }
 
+    /** Notification keys the user has already seen in the Hub. */
+    val hubReadKeys: Flow<Set<String>> = store.data.map { it[HUB_READ].orEmpty() }
+
+    suspend fun setHubReadKeys(keys: Set<String>) {
+        store.edit { it[HUB_READ] = keys }
+    }
+
     private companion object {
         val APP_ORDER = stringPreferencesKey("app_order")
+        val HUB_READ = stringSetPreferencesKey("hub_read")
     }
 }

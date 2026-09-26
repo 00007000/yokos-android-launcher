@@ -50,6 +50,11 @@ android {
 
     kotlinOptions {
         jvmTarget = '17'
+        // Pager, sticky headers, bottom sheets and swipe-to-dismiss are still marked experimental.
+        freeCompilerArgs += [
+            '-opt-in=androidx.compose.foundation.ExperimentalFoundationApi',
+            '-opt-in=androidx.compose.material3.ExperimentalMaterial3Api',
+        ]
     }
 
     buildFeatures {

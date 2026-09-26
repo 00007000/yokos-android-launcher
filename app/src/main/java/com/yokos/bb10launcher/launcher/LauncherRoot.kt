@@ -56,6 +56,9 @@ import com.yokos.bb10launcher.apps.AppActionsDialog
 import com.yokos.bb10launcher.apps.AppEntry
 import com.yokos.bb10launcher.apps.AppGridPage
 import com.yokos.bb10launcher.apps.AppOrdering
+import com.yokos.bb10launcher.hub.ui.HubRow
+import com.yokos.bb10launcher.hub.ui.HubScreen
+import com.yokos.bb10launcher.onboarding.Permissions
 import com.yokos.bb10launcher.ui.theme.Bb10Colors
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
@@ -69,6 +72,8 @@ const val FIRST_APP_PAGE = 2
 fun LauncherRoot(commands: Flow<HomeCommand>, viewModel: LauncherViewModel) {
     val context = LocalContext.current
     val apps by viewModel.apps.collectAsStateWithLifecycle()
+    val hubState by viewModel.hub.state.collectAsStateWithLifecycle()
+    val setup by viewModel.setup.collectAsStateWithLifecycle()
     val appPages = remember(apps) { AppOrdering.pages(apps) }
     val pagerState = rememberPagerState(initialPage = FRAMES_PAGE) { FIRST_APP_PAGE + appPages.size }
     val scope = rememberCoroutineScope()
@@ -107,7 +112,13 @@ fun LauncherRoot(commands: Flow<HomeCommand>, viewModel: LauncherViewModel) {
                 key = { it },
             ) { page ->
                 when (page) {
-                    HUB_PAGE -> HubPagePlaceholder()
+                    HUB_PAGE -> HubScreen(
+                        state = hubState,
+                        hasAccess = setup.notificationAccess,
+                        hub = viewModel.hub,
+                        onGrantAccess = { context.startSafely(Permissions.notificationAccessIntent(context)) },
+                        hiddenFraction = { pagerState.hiddenFraction(HUB_PAGE) },
+                    )
                     FRAMES_PAGE -> FramesPagePlaceholder()
                     else -> {
                         val pageIndex = page - FIRST_APP_PAGE
@@ -126,7 +137,7 @@ fun LauncherRoot(commands: Flow<HomeCommand>, viewModel: LauncherViewModel) {
             PageIndicator(pagerState, appPageCount = appPages.size) { page ->
                 scope.launch { pagerState.animateScrollToPage(page) }
             }
-            ActionBar(
+            if (pagerState.currentPage != HUB_PAGE) ActionBar(
                 onPhone = { context.startSafely(Intent(Intent.ACTION_DIAL)) },
                 onSearch = { searchOpen = true },
                 onCamera = { context.startSafely(Intent(MediaStore.INTENT_ACTION_STILL_IMAGE_CAMERA)) },
@@ -138,6 +149,24 @@ fun LauncherRoot(commands: Flow<HomeCommand>, viewModel: LauncherViewModel) {
                 apps = apps,
                 onLaunch = { searchOpen = false; viewModel.launch(it) },
                 onClose = { searchOpen = false },
+                extraResults = { query ->
+                    val matches = remember(hubState, query) { hubState.search(query) }
+                    if (matches.isNotEmpty()) {
+                        Column {
+                            SectionHeader(stringResource(R.string.hub_title))
+                            matches.forEach { item ->
+                                HubRow(
+                                    item = item,
+                                    unread = hubState.isUnread(item),
+                                    modifier = Modifier.clickable {
+                                        searchOpen = false
+                                        viewModel.hub.open(item.key)
+                                    },
+                                )
+                            }
+                        }
+                    }
+                },
             )
         }
     }
@@ -153,18 +182,15 @@ fun LauncherRoot(commands: Flow<HomeCommand>, viewModel: LauncherViewModel) {
 }
 
 @Composable
-private fun HubPagePlaceholder() {
-    Box(Modifier.fillMaxSize().background(Bb10Colors.Black), contentAlignment = Alignment.Center) {
-        Text(stringResource(R.string.hub_title), style = MaterialTheme.typography.headlineMedium)
-    }
-}
-
-@Composable
 private fun FramesPagePlaceholder() {
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Text(stringResource(R.string.frames_empty), color = Bb10Colors.TextDim)
     }
 }
+
+/** How far [page] is scrolled out of view: 0 when it fills the pager, 1 when a full page away. */
+fun PagerState.hiddenFraction(page: Int): Float =
+    ((currentPage - page) + currentPageOffsetFraction).let { kotlin.math.abs(it) }.coerceIn(0f, 1f)
 
 @Composable
 private fun EditModeBar(onDone: () -> Unit) {
