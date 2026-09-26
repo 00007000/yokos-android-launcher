@@ -11,9 +11,8 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
-        jcenter()
     }
 }
 
-rootProject.name = "BB10HubLauncher"
+rootProject.name = "BB10Launcher"
 include ':app'
