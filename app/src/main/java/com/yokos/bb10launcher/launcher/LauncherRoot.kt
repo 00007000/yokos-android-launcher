@@ -188,7 +188,7 @@ fun LauncherRoot(commands: Flow<HomeCommand>, viewModel: LauncherViewModel) {
                                     unread = hubState.isUnread(item),
                                     modifier = Modifier.clickable {
                                         searchOpen = false
-                                        viewModel.hub.open(item.key)
+                                        viewModel.hub.open(item.id)
                                     },
                                 )
                             }

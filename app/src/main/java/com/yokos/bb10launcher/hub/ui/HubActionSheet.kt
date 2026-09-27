@@ -45,7 +45,7 @@ import com.yokos.bb10launcher.ui.theme.Bb10Colors
 
 private const val MINUTE = 60_000L
 
-/** Long-press menu for a Hub entry: open, reply inline, read state, snooze or dismiss. */
+/** Long-press menu for a Hub entry: open, reply inline, read state, snooze or delete. */
 @Composable
 fun HubActionSheet(
     item: HubItem,
@@ -53,7 +53,7 @@ fun HubActionSheet(
     hub: HubRepository,
     onDismissRequest: () -> Unit,
 ) {
-    var reply by remember(item.key) { mutableStateOf("") }
+    var reply by remember(item.id) { mutableStateOf("") }
     fun act(block: () -> Unit) {
         block()
         onDismissRequest()
@@ -82,12 +82,12 @@ fun HubActionSheet(
                         placeholder = { Text(stringResource(R.string.reply_hint)) },
                         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
                         keyboardActions = KeyboardActions(onSend = {
-                            if (reply.isNotBlank()) act { hub.reply(item.key, reply.trim()) }
+                            if (reply.isNotBlank()) act { hub.reply(item.id, reply.trim()) }
                         }),
                         modifier = Modifier.weight(1f),
                     )
                     IconButton(
-                        onClick = { act { hub.reply(item.key, reply.trim()) } },
+                        onClick = { act { hub.reply(item.id, reply.trim()) } },
                         enabled = reply.isNotBlank(),
                     ) {
                         Icon(Icons.AutoMirrored.Filled.Send, contentDescription = stringResource(R.string.action_send))
@@ -95,26 +95,26 @@ fun HubActionSheet(
                 }
             }
             HorizontalDivider(color = Bb10Colors.Divider)
-            if (item.canOpen) {
-                SheetAction(rememberVectorPainter(Icons.AutoMirrored.Filled.ExitToApp), stringResource(R.string.action_open)) {
-                    act { hub.open(item.key) }
-                }
+            SheetAction(rememberVectorPainter(Icons.AutoMirrored.Filled.ExitToApp), stringResource(R.string.action_open)) {
+                act { hub.open(item.id) }
             }
             if (unread) {
                 SheetAction(rememberVectorPainter(Icons.Filled.Done), stringResource(R.string.action_mark_read)) {
-                    act { hub.markRead(listOf(item.key)) }
+                    act { hub.markRead(listOf(item.id)) }
                 }
             } else {
                 SheetAction(rememberVectorPainter(Icons.Filled.Email), stringResource(R.string.action_mark_unread)) {
-                    act { hub.markUnread(item.key) }
+                    act { hub.markUnread(item.id) }
                 }
             }
-            val snooze = painterResource(R.drawable.ic_snooze)
-            SheetAction(snooze, stringResource(R.string.snooze_15m)) { act { hub.snooze(item.key, 15 * MINUTE) } }
-            SheetAction(snooze, stringResource(R.string.snooze_1h)) { act { hub.snooze(item.key, 60 * MINUTE) } }
-            SheetAction(snooze, stringResource(R.string.snooze_4h)) { act { hub.snooze(item.key, 240 * MINUTE) } }
-            SheetAction(rememberVectorPainter(Icons.Filled.Delete), stringResource(R.string.action_dismiss)) {
-                act { hub.dismiss(item.key) }
+            if (item.canSnooze) {
+                val snooze = painterResource(R.drawable.ic_snooze)
+                SheetAction(snooze, stringResource(R.string.snooze_15m)) { act { hub.snooze(item.id, 15 * MINUTE) } }
+                SheetAction(snooze, stringResource(R.string.snooze_1h)) { act { hub.snooze(item.id, 60 * MINUTE) } }
+                SheetAction(snooze, stringResource(R.string.snooze_4h)) { act { hub.snooze(item.id, 240 * MINUTE) } }
+            }
+            SheetAction(rememberVectorPainter(Icons.Filled.Delete), stringResource(R.string.action_delete)) {
+                act { hub.delete(item.id) }
             }
         }
     }

@@ -6,7 +6,7 @@ A BlackBerry 10–style home launcher for Android 9+ (API 28–34), written in K
 
 | BB10 feature | How it works on Android |
 |---|---|
-| **Hub**: one stream for every app's messages | A `NotificationListenerService` feeds a shared `HubRepository`. The Hub page has an account rail with unread badges, day-grouped entries with category colour stripes, swipe to dismiss, and a long-press sheet with inline reply, mark read/unread, snooze (15 min / 1 h / 4 h) and dismiss. |
+| **Hub**: one stream for every app's messages | A `NotificationListenerService` records every notification in an on-device history (SQLite), so entries stay after they leave the status bar and across restarts, and each new message in a conversation gets its own entry. The Hub page has an account rail with unread badges, day-grouped entries with category colour stripes, swipe to delete, and a long-press sheet with inline reply, mark read/unread, snooze (15 min / 1 h / 4 h) and delete. History keeps 90 days (up to 5,000 cleared entries); *Clear history* empties it. |
 | **Peek** into the Hub from any app | An accessibility service (`BB10 Peek`) draws a thin strip on one screen edge. Drag in from it to slide the Hub over the current app. Let go past 40% (or flick) to open the full Hub. |
 | **Active Frames** | The last 8 apps you used, from `UsageStatsManager`, as tinted cards with a close button. You can also pin any app widget as a live frame. |
 | **App grid pages** | 4×6 pages from `LauncherApps` (work profile included). Long-press and drag to rearrange, tap in rearrange mode for App info / Uninstall. |
@@ -14,6 +14,9 @@ A BlackBerry 10–style home launcher for Android 9+ (API 28–34), written in K
 | **Look** | Black and dark-grey surfaces with the BB10 blue accent. The font is Source Sans 3 (SIL OFL) in place of Slate Pro, which can't be redistributed. |
 
 ### Android limits
+
+- The Hub history starts when you grant notification access. Android doesn't give other apps its own notification history, so anything from before then (other than what's still in the status bar) can't be imported.
+- Reply and snooze only work while the notification is still in the status bar. Older entries open the app instead.
 
 - Active Frames can't mirror other apps' live screens. Android offers no way to do that without screen capture, so app frames show the icon and last-used time, and widgets serve as live frames.
 - Closing a frame only hides it until you use the app again. Launchers can't stop other apps.

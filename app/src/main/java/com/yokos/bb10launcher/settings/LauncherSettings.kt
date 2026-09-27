@@ -27,13 +27,6 @@ class LauncherSettings(context: Context) {
         store.edit { it[APP_ORDER] = keys.joinToString("\n") }
     }
 
-    /** Notification keys the user has already seen in the Hub. */
-    val hubReadKeys: Flow<Set<String>> = store.data.map { it[HUB_READ].orEmpty() }
-
-    suspend fun setHubReadKeys(keys: Set<String>) {
-        store.edit { it[HUB_READ] = keys }
-    }
-
     /** When the user last closed each Active Frame, by package. */
     val closedFrames: Flow<Map<String, Long>> = store.data.map { prefs ->
         prefs[CLOSED_FRAMES].orEmpty().mapNotNull { entry ->
@@ -75,7 +68,6 @@ class LauncherSettings(context: Context) {
 
     private companion object {
         val APP_ORDER = stringPreferencesKey("app_order")
-        val HUB_READ = stringSetPreferencesKey("hub_read")
         val CLOSED_FRAMES = stringSetPreferencesKey("closed_frames")
         val WIDGET_FRAMES = stringPreferencesKey("widget_frames")
         val PEEK_EDGE = stringPreferencesKey("peek_edge")

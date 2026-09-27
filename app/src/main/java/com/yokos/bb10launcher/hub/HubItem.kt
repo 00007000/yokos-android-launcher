@@ -19,11 +19,38 @@ enum class HubCategory {
             "progress" -> Progress
             else -> Default
         }
+
+        /** Uses the notification's category, falling back to well-known apps when it has none. */
+        fun classify(category: String?, packageName: String): HubCategory {
+            val byCategory = fromNotificationCategory(category)
+            if (byCategory != Default) return byCategory
+            return when (packageName) {
+                in MESSAGE_APPS -> Message
+                in SOCIAL_APPS -> Social
+                in CALL_APPS -> Call
+                else -> Default
+            }
+        }
+
+        private val MESSAGE_APPS = setOf(
+            "com.google.android.gm", "com.microsoft.office.outlook", "de.tutao.tutanota",
+            "com.yahoo.mobile.client.android.mail", "com.android.mms", "com.google.android.apps.messaging",
+            "com.samsung.android.messaging", "com.textra", "org.thoughtcrime.securesms",
+            "com.whatsapp", "org.telegram.messenger",
+        )
+        private val SOCIAL_APPS = setOf(
+            "com.twitter.android", "com.instagram.android", "com.facebook.katana", "com.facebook.orca",
+            "com.linkedin.android", "com.reddit.frontpage", "com.snapchat.android",
+        )
+        private val CALL_APPS = setOf(
+            "com.android.phone", "com.android.server.telecom", "com.google.android.dialer",
+            "com.samsung.android.incallui", "com.samsung.android.dialer",
+        )
     }
 }
 
-/** One message in the Hub. Plain data: the listener keeps the live notification for actions. */
-data class HubItem(
+/** A notification as the listener sees it, before it becomes a Hub history entry. */
+data class PostedNotification(
     val key: String,
     val packageName: String,
     val appLabel: String,
@@ -31,9 +58,31 @@ data class HubItem(
     val text: String,
     val postTime: Long,
     val category: HubCategory,
-    val canReply: Boolean,
-    val canOpen: Boolean,
+    val hasReply: Boolean,
 )
+
+/**
+ * One entry in the Hub history. Entries outlive the notification that created them: [active]
+ * says whether it is still in the status bar, which is what reply and snooze need.
+ */
+data class HubItem(
+    val id: Long,
+    val key: String,
+    val packageName: String,
+    val appLabel: String,
+    val title: String,
+    val text: String,
+    val postTime: Long,
+    val category: HubCategory,
+    val hasReply: Boolean,
+    val active: Boolean,
+    val read: Boolean,
+) {
+    val canReply: Boolean get() = active && hasReply
+
+    /** Snoozing needs the live notification. */
+    val canSnooze: Boolean get() = active
+}
 
 /** One app in the Hub's account rail. */
 data class HubAccount(
@@ -46,9 +95,8 @@ data class HubAccount(
 data class HubState(
     val connected: Boolean = false,
     val items: List<HubItem> = emptyList(),
-    val readKeys: Set<String> = emptySet(),
 ) {
-    fun isUnread(item: HubItem) = item.key !in readKeys
+    fun isUnread(item: HubItem) = !item.read
 
     val unreadCount: Int get() = items.count(::isUnread)
 

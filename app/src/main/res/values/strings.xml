@@ -16,6 +16,9 @@
     <string name="action_mark_unread">Mark unread</string>
     <string name="action_snooze">Snooze</string>
     <string name="action_dismiss">Dismiss</string>
+    <string name="action_delete">Delete</string>
+    <string name="hub_clear_history">Clear history</string>
+    <string name="hub_clear_history_desc">Deletes every entry that is no longer in the status bar. Notifications still showing stay.</string>
     <string name="action_reply">Reply</string>
     <string name="action_send">Send</string>
     <string name="reply_hint">Reply…</string>

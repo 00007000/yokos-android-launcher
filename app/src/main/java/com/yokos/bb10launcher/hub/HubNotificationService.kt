@@ -16,7 +16,7 @@ import com.yokos.bb10launcher.launcherApp
 import java.util.concurrent.ConcurrentHashMap
 
 /**
- * Feeds every user-facing notification into the [HubRepository] and carries out Hub actions
+ * Records every user-facing notification in the [HubRepository] history and carries out Hub actions
  * (open, reply, snooze, dismiss) on the live notification.
  */
 class HubNotificationService : NotificationListenerService(), HubController {
@@ -26,11 +26,11 @@ class HubNotificationService : NotificationListenerService(), HubController {
 
     override fun onListenerConnected() {
         active.clear()
-        val items = activeNotifications.orEmpty().mapNotNull { sbn ->
-            toItem(sbn)?.also { active[sbn.key] = sbn }
+        val posted = activeNotifications.orEmpty().mapNotNull { sbn ->
+            toPosted(sbn)?.also { active[sbn.key] = sbn }
         }
         hub.controller = this
-        hub.onConnected(items)
+        hub.onConnected(posted)
     }
 
     override fun onListenerDisconnected() {
@@ -40,18 +40,18 @@ class HubNotificationService : NotificationListenerService(), HubController {
     }
 
     override fun onNotificationPosted(sbn: StatusBarNotification) {
-        val item = toItem(sbn)
-        if (item == null) {
-            if (active.remove(sbn.key) != null) hub.remove(sbn.key)
+        val posted = toPosted(sbn)
+        if (posted == null) {
+            if (active.remove(sbn.key) != null) hub.onRemoved(sbn.key)
             return
         }
         active[sbn.key] = sbn
-        hub.upsert(item)
+        hub.onPosted(posted)
     }
 
     override fun onNotificationRemoved(sbn: StatusBarNotification) {
         active.remove(sbn.key)
-        hub.remove(sbn.key)
+        hub.onRemoved(sbn.key)
     }
 
     override fun open(key: String): Boolean {
@@ -94,7 +94,7 @@ class HubNotificationService : NotificationListenerService(), HubController {
         }
     }
 
-    private fun toItem(sbn: StatusBarNotification): HubItem? {
+    private fun toPosted(sbn: StatusBarNotification): PostedNotification? {
         val notification = sbn.notification
         if (sbn.packageName == packageName) return null
         if (sbn.isOngoing || notification.flags and Notification.FLAG_FOREGROUND_SERVICE != 0) return null
@@ -108,16 +108,15 @@ class HubNotificationService : NotificationListenerService(), HubController {
                 ?: extras.getCharSequence(Notification.EXTRA_TEXT))?.toString().orEmpty()
         if (title.isBlank() && text.isBlank()) return null
 
-        return HubItem(
+        return PostedNotification(
             key = sbn.key,
             packageName = sbn.packageName,
             appLabel = labelFor(sbn.packageName),
             title = title,
             text = text,
             postTime = sbn.postTime,
-            category = HubCategory.fromNotificationCategory(notification.category),
-            canReply = replyAction(notification) != null,
-            canOpen = notification.contentIntent != null,
+            category = HubCategory.classify(notification.category, sbn.packageName),
+            hasReply = replyAction(notification) != null,
         )
     }
 

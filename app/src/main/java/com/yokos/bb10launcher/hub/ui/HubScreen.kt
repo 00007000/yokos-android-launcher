@@ -22,8 +22,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -31,6 +33,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -85,6 +88,7 @@ fun HubScreen(
 ) {
     var selected by rememberSaveable { mutableStateOf<String?>(null) }
     var sheetItem by remember { mutableStateOf<HubItem?>(null) }
+    var confirmClear by remember { mutableStateOf(false) }
     val accounts = remember(state) { state.accounts() }
     // Fall back to "All" once the selected app has no entries left.
     val filter = selected?.takeIf { pkg -> accounts.any { it.packageName == pkg } }
@@ -97,11 +101,19 @@ fun HubScreen(
                 title = accounts.firstOrNull { it.packageName == filter }?.label ?: stringResource(R.string.hub_title),
                 unread = items.count(state::isUnread),
                 onMarkAllRead = { hub.markAllRead(filter) },
+                onClearHistory = { confirmClear = true },
             )
             when {
-                !state.connected && !hasAccess -> AccessNeeded(onGrantAccess)
+                // Saved history still shows if access was revoked; the prompt only replaces an empty Hub.
+                !hasAccess && items.isEmpty() -> AccessNeeded(onGrantAccess)
                 items.isEmpty() -> EmptyHub()
-                else -> HubList(items, state, onOpen = { hub.open(it.key) }, onDismiss = { hub.dismiss(it.key) }, onLongPress = { sheetItem = it })
+                else -> HubList(
+                    items,
+                    state,
+                    onOpen = { hub.open(it.id) },
+                    onDismiss = { hub.delete(it.id) },
+                    onLongPress = { sheetItem = it },
+                )
             }
         }
         AccountRail(
@@ -111,6 +123,22 @@ fun HubScreen(
             onSelect = { selected = it },
             modifier = Modifier.graphicsLayer {
                 translationX = hiddenFraction().coerceIn(0f, 1f) * widthPx
+            },
+        )
+    }
+
+    if (confirmClear) {
+        AlertDialog(
+            onDismissRequest = { confirmClear = false },
+            title = { Text(stringResource(R.string.hub_clear_history)) },
+            text = { Text(stringResource(R.string.hub_clear_history_desc)) },
+            confirmButton = {
+                TextButton(onClick = { hub.deleteAll(filter); confirmClear = false }) {
+                    Text(stringResource(R.string.hub_clear_history))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { confirmClear = false }) { Text(stringResource(android.R.string.cancel)) }
             },
         )
     }
@@ -126,7 +154,7 @@ fun HubScreen(
 }
 
 @Composable
-private fun HubHeader(title: String, unread: Int, onMarkAllRead: () -> Unit) {
+private fun HubHeader(title: String, unread: Int, onMarkAllRead: () -> Unit, onClearHistory: () -> Unit) {
     Row(
         Modifier.fillMaxWidth().padding(start = 16.dp, end = 4.dp, top = 12.dp, bottom = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -141,6 +169,9 @@ private fun HubHeader(title: String, unread: Int, onMarkAllRead: () -> Unit) {
         }
         IconButton(onClick = onMarkAllRead, enabled = unread > 0) {
             Icon(Icons.Filled.Done, contentDescription = stringResource(R.string.hub_mark_all_read))
+        }
+        IconButton(onClick = onClearHistory) {
+            Icon(Icons.Filled.Delete, contentDescription = stringResource(R.string.hub_clear_history))
         }
     }
 }
@@ -220,7 +251,7 @@ private fun HubList(
     LazyColumn(Modifier.fillMaxSize()) {
         sections.forEach { (bucket, entries) ->
             stickyHeader(key = bucket.toString()) { DayHeader(bucket) }
-            items(entries, key = { it.key }) { item ->
+            items(entries, key = { it.id }) { item ->
                 val dismissState = rememberSwipeToDismissBoxState(
                     confirmValueChange = { value ->
                         if (value != SwipeToDismissBoxValue.Settled) onDismiss(item)
