@@ -315,11 +315,15 @@ private fun ActionBarButton(icon: ImageVector, label: String, onClick: () -> Uni
 }
 
 fun Context.startSafely(intent: Intent) {
-    try {
-        startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
-    } catch (_: ActivityNotFoundException) {
-        // Nothing on this device handles it.
-    } catch (_: SecurityException) {
-        // The handler isn't exported to us.
-    }
+    tryStart(intent)
+}
+
+/** Starts [intent], returning false if nothing on this device can (or may) handle it. */
+fun Context.tryStart(intent: Intent): Boolean = try {
+    startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+    true
+} catch (_: ActivityNotFoundException) {
+    false
+} catch (_: SecurityException) {
+    false
 }

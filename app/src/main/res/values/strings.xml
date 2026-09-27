@@ -42,7 +42,7 @@
     <string name="frames_remove_widget">Remove widget frame</string>
 
     <!-- App grid -->
-    <string name="apps_search_hint">Search apps and Hub</string>
+    <string name="apps_search_hint">Search phone or Google</string>
     <string name="apps_done">Done</string>
     <string name="apps_edit_hint">Drag icons to rearrange. Tap one for more.</string>
     <string name="app_info">App info</string>
@@ -54,7 +54,7 @@
     <string name="action_camera">Camera</string>
     <string name="action_close">Close</string>
     <string name="search_apps">Apps</string>
-    <string name="search_web">Search the web for “%s”</string>
+    <string name="search_web">Search Google for “%s”</string>
     <string name="search_no_results">No matches</string>
 
     <!-- Setup -->

@@ -10,7 +10,7 @@ A BlackBerry 10–style home launcher for Android 9+ (API 28–34), written in K
 | **Peek** into the Hub from any app | An accessibility service (`BB10 Peek`) draws a thin strip on one screen edge. Drag in from it to slide the Hub over the current app. Let go past 40% (or flick) to open the full Hub. |
 | **Active Frames** | The last 8 apps you used, from `UsageStatsManager`, as tinted cards with a close button. You can also pin any app widget as a live frame. |
 | **App grid pages** | 4×6 pages from `LauncherApps` (work profile included). Long-press and drag to rearrange, tap in rearrange mode for App info / Uninstall. |
-| **Home layout** | Swipe between Hub ← Active Frames ← app pages. Home returns to Active Frames. Bottom bar: Phone · Search · Camera. Search covers apps, Hub entries and the web. Swipe down on the app grid to open notifications. |
+| **Home layout** | Swipe between Hub ← Active Frames ← app pages. Home returns to Active Frames. Bottom bar: Phone · Search · Camera. Search covers apps and Hub entries on the phone, with a Google search on top (the keyboard's search key goes to Google). Swipe down on the app grid to open notifications. |
 | **Look** | Black and dark-grey surfaces with the BB10 blue accent. The font is Source Sans 3 (SIL OFL) in place of Slate Pro, which can't be redistributed. |
 
 ### Android limits
