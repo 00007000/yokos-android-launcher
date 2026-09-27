@@ -175,7 +175,7 @@ class PeekOverlayService : AccessibilityService() {
     @SuppressLint("ClickableViewAccessibility")
     private fun createStrip(): View = View(this).apply {
         val slop = ViewConfiguration.get(context).scaledTouchSlop
-        val flingVelocity = ViewConfiguration.get(context).scaledMinimumFlingVelocity * FLING_MULTIPLIER
+        val flingVelocity = ViewConfiguration.get(context).scaledMinimumFlingVelocity * FLING_MULTIPLIER.toFloat()
         var downX = 0f
         var dragging = false
         var tracker: VelocityTracker? = null
