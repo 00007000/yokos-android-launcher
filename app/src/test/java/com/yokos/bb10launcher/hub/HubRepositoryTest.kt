@@ -188,6 +188,22 @@ class HubRepositoryTest {
     }
 
     @Test
+    fun `swipe toggles read and unread and keeps the entry`() {
+        val store = FakeStore()
+        val hub = repo(store)
+        hub.onPosted(posted("a", 1))
+        val id = hub.item("a").id
+        hub.toggleRead(id)
+        assertTrue(hub.item("a").read)
+        assertTrue(store.rows.getValue(id).read)
+        hub.toggleRead(id)
+        assertFalse(hub.item("a").read)
+        assertEquals(1, hub.state.value.items.size)
+        hub.toggleRead(999)
+        assertEquals(1, hub.state.value.items.size)
+    }
+
+    @Test
     fun `mark all read only touches the filtered app`() {
         val hub = repo()
         hub.onPosted(posted("a", 1, pkg = "com.mail"))

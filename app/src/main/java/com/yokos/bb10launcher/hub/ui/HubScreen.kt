@@ -24,6 +24,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Done
+import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -39,6 +40,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -111,7 +113,7 @@ fun HubScreen(
                     items,
                     state,
                     onOpen = { hub.open(it.id) },
-                    onDismiss = { hub.delete(it.id) },
+                    onToggleRead = { hub.toggleRead(it.id) },
                     onLongPress = { sheetItem = it },
                 )
             }
@@ -243,7 +245,7 @@ private fun HubList(
     items: List<HubItem>,
     state: HubState,
     onOpen: (HubItem) -> Unit,
-    onDismiss: (HubItem) -> Unit,
+    onToggleRead: (HubItem) -> Unit,
     onLongPress: (HubItem) -> Unit,
 ) {
     val zone = remember { ZoneId.systemDefault() }
@@ -252,15 +254,18 @@ private fun HubList(
         sections.forEach { (bucket, entries) ->
             stickyHeader(key = bucket.toString()) { DayHeader(bucket) }
             items(entries, key = { it.id }) { item ->
-                val dismissState = rememberSwipeToDismissBoxState(
+                val current by rememberUpdatedState(item)
+                // Swiping either way toggles read/unread; the row then springs back (the swipe is
+                // never "confirmed"), so nothing is removed. Delete lives in the long-press menu.
+                val swipeState = rememberSwipeToDismissBoxState(
                     confirmValueChange = { value ->
-                        if (value != SwipeToDismissBoxValue.Settled) onDismiss(item)
-                        true
+                        if (value != SwipeToDismissBoxValue.Settled) onToggleRead(current)
+                        false
                     },
                 )
                 SwipeToDismissBox(
-                    state = dismissState,
-                    backgroundContent = { Box(Modifier.fillMaxSize().background(Bb10Colors.SurfaceHigh)) },
+                    state = swipeState,
+                    backgroundContent = { ReadToggleBackground(swipeState.dismissDirection, unread = !item.read) },
                     modifier = Modifier.animateItemPlacement(),
                 ) {
                     HubRow(
@@ -274,6 +279,22 @@ private fun HubList(
                 }
             }
         }
+    }
+}
+
+/** What a swipe will do, revealed behind the row as it slides. */
+@Composable
+private fun ReadToggleBackground(direction: SwipeToDismissBoxValue, unread: Boolean) {
+    val label = stringResource(if (unread) R.string.action_mark_read else R.string.action_mark_unread)
+    val icon = if (unread) Icons.Filled.Done else Icons.Filled.Email
+    Row(
+        Modifier.fillMaxSize().background(Bb10Colors.Blue).padding(horizontal = 20.dp),
+        horizontalArrangement = if (direction == SwipeToDismissBoxValue.EndToStart) Arrangement.End else Arrangement.Start,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(icon, contentDescription = null, tint = Color.White)
+        Spacer(Modifier.width(10.dp))
+        Text(label, style = MaterialTheme.typography.labelLarge, color = Color.White)
     }
 }
 

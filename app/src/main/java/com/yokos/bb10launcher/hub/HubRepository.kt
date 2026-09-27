@@ -74,6 +74,12 @@ class HubRepository(
 
     fun markUnread(id: Long) = setRead(setOf(id), read = false)
 
+    /** Flips an entry between read and unread (the Hub's swipe gesture). */
+    fun toggleRead(id: Long) = synchronized(lock) {
+        val item = find(id) ?: return@synchronized
+        replace(listOf(item.copy(read = !item.read)))
+    }
+
     fun markAllRead(packageName: String?) = markRead(_state.value.filtered(packageName).map { it.id })
 
     /** Opens the conversation if the notification is still live, otherwise the app itself. */
