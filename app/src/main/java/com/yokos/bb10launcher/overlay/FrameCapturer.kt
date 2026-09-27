@@ -13,10 +13,10 @@ import java.util.concurrent.Executors
 
 /**
  * Takes a small still picture of the app on screen (Android 11+) so its Active Frame can show it.
+ * Only created on Android 11+; on older versions frames keep showing the app icon.
  * One picture shortly after the app opens, then a refresh every few seconds while it stays open,
  * so the picture is recent when the user leaves. Pictures stay in the app's cache on this phone.
  */
-@RequiresApi(Build.VERSION_CODES.R)
 class FrameCapturer(
     private val service: AccessibilityService,
     private val previews: FramePreviews,
@@ -29,7 +29,8 @@ class FrameCapturer(
 
     private val tick = object : Runnable {
         override fun run() {
-            capture()
+            // Screenshots from an accessibility service need Android 11.
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) capture()
             handler.postDelayed(this, PreviewPolicy.CAPTURE_INTERVAL_MILLIS)
         }
     }
@@ -53,6 +54,7 @@ class FrameCapturer(
         worker.shutdown()
     }
 
+    @RequiresApi(Build.VERSION_CODES.R)
     private fun capture() {
         val pkg = current ?: return
         if (!canCapture()) return
