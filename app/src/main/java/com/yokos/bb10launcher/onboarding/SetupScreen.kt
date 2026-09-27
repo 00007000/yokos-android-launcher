@@ -14,12 +14,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -34,14 +36,19 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.yokos.bb10launcher.R
 import com.yokos.bb10launcher.launcher.startSafely
+import com.yokos.bb10launcher.overlay.PeekConfig
+import com.yokos.bb10launcher.overlay.PeekEdge
+import com.yokos.bb10launcher.overlay.PeekLength
+import com.yokos.bb10launcher.overlay.PeekPosition
 import com.yokos.bb10launcher.ui.theme.Bb10Colors
 
 /** Checklist of the special accesses the launcher needs, each with a button to grant it. */
 @Composable
 fun SetupScreen(
     status: SetupStatus,
+    peekConfig: PeekConfig,
+    onPeekConfigChange: (PeekConfig) -> Unit,
     onClose: () -> Unit,
-    extraContent: @Composable () -> Unit = {},
 ) {
     val context = LocalContext.current
     fun open(intent: Intent) = context.startSafely(intent)
@@ -85,7 +92,13 @@ fun SetupScreen(
             granted = status.usageAccess,
             onGrant = { open(Permissions.usageAccessIntent(context)) },
         )
-        extraContent()
+        SetupItem(
+            title = stringResource(R.string.setup_accessibility),
+            description = stringResource(R.string.setup_accessibility_desc),
+            granted = status.peekEnabled,
+            onGrant = { open(Permissions.accessibilityIntent()) },
+        )
+        PeekSettings(peekConfig, onPeekConfigChange)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             HorizontalDivider(color = Bb10Colors.Divider, modifier = Modifier.padding(top = 8.dp))
             Text(
@@ -97,6 +110,57 @@ fun SetupScreen(
             TextButton(onClick = { open(Permissions.appInfoIntent(context)) }, modifier = Modifier.padding(start = 8.dp)) {
                 Text(stringResource(R.string.setup_open_app_info))
             }
+        }
+    }
+}
+
+@Composable
+private fun PeekSettings(config: PeekConfig, onChange: (PeekConfig) -> Unit) {
+    Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp)) {
+        Text(stringResource(R.string.peek_settings), style = MaterialTheme.typography.titleMedium)
+        ChoiceRow(
+            label = stringResource(R.string.peek_edge),
+            options = listOf(PeekEdge.Left to R.string.peek_left, PeekEdge.Right to R.string.peek_right),
+            selected = config.edge,
+            onSelect = { onChange(config.copy(edge = it)) },
+        )
+        ChoiceRow(
+            label = stringResource(R.string.peek_length),
+            options = listOf(
+                PeekLength.Third to R.string.peek_third,
+                PeekLength.Half to R.string.peek_half,
+                PeekLength.Full to R.string.peek_full,
+            ),
+            selected = config.length,
+            onSelect = { onChange(config.copy(length = it)) },
+        )
+        ChoiceRow(
+            label = stringResource(R.string.peek_position),
+            options = listOf(
+                PeekPosition.Top to R.string.peek_top,
+                PeekPosition.Center to R.string.peek_center,
+                PeekPosition.Bottom to R.string.peek_bottom,
+            ),
+            selected = config.position,
+            onSelect = { onChange(config.copy(position = it)) },
+        )
+    }
+}
+
+@Composable
+private fun <T> ChoiceRow(label: String, options: List<Pair<T, Int>>, selected: T, onSelect: (T) -> Unit) {
+    Row(
+        Modifier.fillMaxWidth().padding(top = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Text(label, style = MaterialTheme.typography.bodyMedium, color = Bb10Colors.TextDim, modifier = Modifier.width(72.dp))
+        options.forEach { (value, text) ->
+            FilterChip(
+                selected = value == selected,
+                onClick = { onSelect(value) },
+                label = { Text(stringResource(text)) },
+            )
         }
     }
 }

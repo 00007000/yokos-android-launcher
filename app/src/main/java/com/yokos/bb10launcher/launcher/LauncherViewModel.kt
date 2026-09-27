@@ -12,6 +12,7 @@ import com.yokos.bb10launcher.frames.UsageEvent
 import com.yokos.bb10launcher.launcherApp
 import com.yokos.bb10launcher.onboarding.Permissions
 import com.yokos.bb10launcher.onboarding.SetupStatus
+import com.yokos.bb10launcher.overlay.PeekConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -41,6 +42,13 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
             val launchable = entries.filter { it.user == Process.myUserHandle() }.mapTo(HashSet()) { it.packageName }
             FrameReducer.reduce(events, launchable, closed, exclude = setOf(application.packageName))
         }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
+    val peekConfig: StateFlow<PeekConfig> =
+        settings.peekConfig.stateIn(viewModelScope, SharingStarted.Eagerly, PeekConfig())
+
+    fun setPeekConfig(config: PeekConfig) {
+        viewModelScope.launch { settings.setPeekConfig(config) }
+    }
 
     val widgetFrames: StateFlow<List<Int>> =
         settings.widgetFrames.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())

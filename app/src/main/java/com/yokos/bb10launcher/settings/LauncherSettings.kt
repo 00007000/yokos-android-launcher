@@ -5,6 +5,10 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.yokos.bb10launcher.overlay.PeekConfig
+import com.yokos.bb10launcher.overlay.PeekEdge
+import com.yokos.bb10launcher.overlay.PeekLength
+import com.yokos.bb10launcher.overlay.PeekPosition
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
@@ -51,10 +55,34 @@ class LauncherSettings(context: Context) {
         store.edit { it[WIDGET_FRAMES] = ids.joinToString(",") }
     }
 
+    /** Placement of the peek strip drawn by the accessibility service. */
+    val peekConfig: Flow<PeekConfig> = store.data.map { prefs ->
+        val defaults = PeekConfig()
+        PeekConfig(
+            edge = enumOrDefault(prefs[PEEK_EDGE], defaults.edge),
+            length = enumOrDefault(prefs[PEEK_LENGTH], defaults.length),
+            position = enumOrDefault(prefs[PEEK_POSITION], defaults.position),
+        )
+    }
+
+    suspend fun setPeekConfig(config: PeekConfig) {
+        store.edit {
+            it[PEEK_EDGE] = config.edge.name
+            it[PEEK_LENGTH] = config.length.name
+            it[PEEK_POSITION] = config.position.name
+        }
+    }
+
     private companion object {
         val APP_ORDER = stringPreferencesKey("app_order")
         val HUB_READ = stringSetPreferencesKey("hub_read")
         val CLOSED_FRAMES = stringSetPreferencesKey("closed_frames")
         val WIDGET_FRAMES = stringPreferencesKey("widget_frames")
+        val PEEK_EDGE = stringPreferencesKey("peek_edge")
+        val PEEK_LENGTH = stringPreferencesKey("peek_length")
+        val PEEK_POSITION = stringPreferencesKey("peek_position")
+
+        inline fun <reified E : Enum<E>> enumOrDefault(name: String?, default: E): E =
+            enumValues<E>().firstOrNull { it.name == name } ?: default
     }
 }

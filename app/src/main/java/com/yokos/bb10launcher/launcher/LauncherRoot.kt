@@ -10,6 +10,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -46,6 +47,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -61,6 +63,7 @@ import com.yokos.bb10launcher.hub.ui.HubRow
 import com.yokos.bb10launcher.hub.ui.HubScreen
 import com.yokos.bb10launcher.onboarding.Permissions
 import com.yokos.bb10launcher.onboarding.SetupScreen
+import com.yokos.bb10launcher.overlay.PeekOverlayService
 import com.yokos.bb10launcher.ui.theme.Bb10Colors
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
@@ -78,6 +81,7 @@ fun LauncherRoot(commands: Flow<HomeCommand>, viewModel: LauncherViewModel) {
     val setup by viewModel.setup.collectAsStateWithLifecycle()
     val frames by viewModel.frames.collectAsStateWithLifecycle()
     val widgetIds by viewModel.widgetFrames.collectAsStateWithLifecycle()
+    val peekConfig by viewModel.peekConfig.collectAsStateWithLifecycle()
     val labels = remember(apps) { apps.associate { it.packageName to it.label } }
     val appPages = remember(apps) { AppOrdering.pages(apps) }
     val pagerState = rememberPagerState(initialPage = FRAMES_PAGE) { FIRST_APP_PAGE + appPages.size }
@@ -94,8 +98,11 @@ fun LauncherRoot(commands: Flow<HomeCommand>, viewModel: LauncherViewModel) {
             setupOpen = false
             editMode = false
             menuApp = null
-            val target = if (command == HomeCommand.OpenHub) HUB_PAGE else FRAMES_PAGE
-            pagerState.animateScrollToPage(target)
+            when (command) {
+                // The peek gesture already slid the Hub in; the window animation shows the rest.
+                HomeCommand.OpenHub -> pagerState.scrollToPage(HUB_PAGE)
+                HomeCommand.GoHome -> pagerState.animateScrollToPage(FRAMES_PAGE)
+            }
         }
     }
 
@@ -143,6 +150,7 @@ fun LauncherRoot(commands: Flow<HomeCommand>, viewModel: LauncherViewModel) {
                     else -> {
                         val pageIndex = page - FIRST_APP_PAGE
                         AppGridPage(
+                            modifier = Modifier.pullDownForNotifications(),
                             apps = appPages.getOrElse(pageIndex) { emptyList() },
                             pageStart = pageIndex * AppOrdering.PAGE_SIZE,
                             editMode = editMode,
@@ -192,7 +200,12 @@ fun LauncherRoot(commands: Flow<HomeCommand>, viewModel: LauncherViewModel) {
     }
 
     if (setupOpen) {
-        SetupScreen(status = setup, onClose = { setupOpen = false })
+        SetupScreen(
+            status = setup,
+            peekConfig = peekConfig,
+            onPeekConfigChange = viewModel::setPeekConfig,
+            onClose = { setupOpen = false },
+        )
     }
 
     menuApp?.let { app ->
@@ -204,6 +217,24 @@ fun LauncherRoot(commands: Flow<HomeCommand>, viewModel: LauncherViewModel) {
         )
     }
 }
+
+/** BB10: swipe down on the home screen to open the notification shade (needs the peek service). */
+private fun Modifier.pullDownForNotifications(): Modifier =
+    pointerInput(Unit) {
+        val threshold = 72.dp.toPx()
+        var pulled = 0f
+        detectVerticalDragGestures(
+            onDragStart = { pulled = 0f },
+            onVerticalDrag = { change, dy ->
+                pulled += dy
+                if (pulled > threshold) {
+                    change.consume()
+                    PeekOverlayService.openNotificationShade()
+                    pulled = Float.NEGATIVE_INFINITY
+                }
+            },
+        )
+    }
 
 /** How far [page] is scrolled out of view: 0 when it fills the pager, 1 when a full page away. */
 fun PagerState.hiddenFraction(page: Int): Float =

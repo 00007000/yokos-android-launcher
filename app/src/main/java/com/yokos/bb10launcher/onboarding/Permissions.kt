@@ -12,18 +12,20 @@ import android.os.Process
 import android.provider.Settings
 import androidx.core.app.NotificationManagerCompat
 import com.yokos.bb10launcher.hub.HubNotificationService
+import com.yokos.bb10launcher.overlay.PeekOverlayService
 
 /** Which of the special accesses the launcher relies on have been granted. */
 data class SetupStatus(
     val isDefaultHome: Boolean = false,
     val notificationAccess: Boolean = false,
     val usageAccess: Boolean = false,
+    val peekEnabled: Boolean = false,
 ) {
-    val grantedCount: Int get() = listOf(isDefaultHome, notificationAccess, usageAccess).count { it }
+    val grantedCount: Int get() = listOf(isDefaultHome, notificationAccess, usageAccess, peekEnabled).count { it }
     val complete: Boolean get() = grantedCount == TOTAL
 
     companion object {
-        const val TOTAL = 3
+        const val TOTAL = 4
     }
 }
 
@@ -32,6 +34,7 @@ object Permissions {
         isDefaultHome = isDefaultHome(context),
         notificationAccess = hasNotificationAccess(context),
         usageAccess = hasUsageAccess(context),
+        peekEnabled = isPeekEnabled(context),
     )
 
     fun isDefaultHome(context: Context): Boolean {
@@ -57,6 +60,15 @@ object Permissions {
         return mode == AppOpsManager.MODE_ALLOWED
     }
 
+    fun isPeekEnabled(context: Context): Boolean {
+        val enabled = Settings.Secure.getString(
+            context.contentResolver,
+            Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES,
+        ) ?: return false
+        val component = ComponentName(context, PeekOverlayService::class.java)
+        return enabled.split(':').any { ComponentName.unflattenFromString(it) == component }
+    }
+
     /** Asks to become the default home app, or opens the home picker if the role dialog is unavailable. */
     fun homeRoleIntent(context: Context): Intent {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -80,6 +92,8 @@ object Permissions {
 
     fun usageAccessIntent(context: Context): Intent =
         Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS, Uri.fromParts("package", context.packageName, null))
+
+    fun accessibilityIntent(): Intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
 
     fun appInfoIntent(context: Context): Intent =
         Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.fromParts("package", context.packageName, null))
