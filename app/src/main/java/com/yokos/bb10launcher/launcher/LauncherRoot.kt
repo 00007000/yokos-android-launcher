@@ -165,7 +165,7 @@ fun LauncherRoot(commands: Flow<HomeCommand>, viewModel: LauncherViewModel) {
             PageIndicator(pagerState, appPageCount = appPages.size) { page ->
                 scope.launch { pagerState.animateScrollToPage(page) }
             }
-            if (pagerState.currentPage != HUB_PAGE) ActionBar(
+            ActionBar(
                 onPhone = { context.startSafely(Intent(Intent.ACTION_DIAL)) },
                 onSearch = { searchOpen = true },
                 onCamera = { context.startSafely(Intent(MediaStore.INTENT_ACTION_STILL_IMAGE_CAMERA)) },

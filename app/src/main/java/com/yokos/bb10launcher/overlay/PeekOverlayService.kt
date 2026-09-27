@@ -56,6 +56,7 @@ class PeekOverlayService : AccessibilityService() {
 
     private var config = PeekConfig()
     private var strip: View? = null
+    private var stripAdded = false
     private var panel: ComposeView? = null
     private var animator: ValueAnimator? = null
     private var overLauncher = false
@@ -111,8 +112,9 @@ class PeekOverlayService : AccessibilityService() {
         runCatching { unregisterReceiver(screenReceiver) }
         animator?.cancel()
         removePanel()
-        strip?.let { runCatching { windowManager.removeView(it) } }
+        if (stripAdded) strip?.let { runCatching { windowManager.removeView(it) } }
         strip = null
+        stripAdded = false
         owner.destroy()
         scope.cancel()
         super.onDestroy()
@@ -147,7 +149,12 @@ class PeekOverlayService : AccessibilityService() {
         }
         val view = strip ?: createStrip().also { strip = it }
         view.background = handleDrawable()
-        if (view.isAttachedToWindow) windowManager.updateViewLayout(view, params) else windowManager.addView(view, params)
+        if (stripAdded) {
+            windowManager.updateViewLayout(view, params)
+        } else {
+            windowManager.addView(view, params)
+            stripAdded = true
+        }
         view.post { excludeFromSystemGestures(view) }
         updateStripVisibility()
     }
@@ -304,6 +311,6 @@ class PeekOverlayService : AccessibilityService() {
 
         /** Opens the notification shade, like BB10's swipe down from the top of the home screen. */
         fun openNotificationShade(): Boolean =
-            instance?.performGlobalAction(GLOBAL_ACTION_NOTIFICATIONS) ?: false
+            instance?.performGlobalAction(AccessibilityService.GLOBAL_ACTION_NOTIFICATIONS) ?: false
     }
 }
