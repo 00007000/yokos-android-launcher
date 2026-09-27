@@ -52,6 +52,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asAndroidBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -238,6 +239,7 @@ private fun AppFrame(
     modifier: Modifier = Modifier,
 ) {
     val icon by rememberPackageIcon(frame.packageName)
+    val preview by rememberFramePreview(frame.packageName, refreshKey = frame.lastUsed)
     val tint = remember(icon) { icon?.averageColor() ?: Bb10Colors.SurfaceHigh }
     Box(
         modifier
@@ -247,30 +249,55 @@ private fun AppFrame(
             .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(6.dp))
             .clickable(onClick = onOpen),
     ) {
+        val picture = preview
+        if (picture != null) {
+            // Where the user left off, like BB10's frames; the top of the app is the most telling part.
+            Image(
+                picture,
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                alignment = Alignment.TopCenter,
+                modifier = Modifier.fillMaxSize(),
+            )
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .height(44.dp)
+                    .background(Brush.verticalGradient(listOf(Color.Black.copy(alpha = 0.6f), Color.Transparent))),
+            )
+        } else {
+            icon?.let {
+                Image(it, contentDescription = null, modifier = Modifier.align(Alignment.Center).size(64.dp))
+            }
+        }
         Text(
             ageText(System.currentTimeMillis() - frame.lastUsed),
             style = MaterialTheme.typography.labelSmall,
-            color = Color.White.copy(alpha = 0.8f),
+            color = Color.White.copy(alpha = 0.9f),
             modifier = Modifier.align(Alignment.TopStart).padding(10.dp),
         )
         IconButton(onClick = onClose, modifier = Modifier.align(Alignment.TopEnd).size(40.dp)) {
             Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.frames_close), tint = Color.White)
         }
-        icon?.let {
-            Image(it, contentDescription = null, modifier = Modifier.align(Alignment.Center).size(64.dp))
-        }
-        Text(
-            label,
-            style = MaterialTheme.typography.titleSmall,
-            color = Color.White,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier
+        Row(
+            Modifier
                 .align(Alignment.BottomStart)
                 .fillMaxWidth()
-                .background(Color.Black.copy(alpha = 0.55f))
-                .padding(horizontal = 10.dp, vertical = 8.dp),
-        )
+                .background(Color.Black.copy(alpha = 0.65f))
+                .padding(horizontal = 8.dp, vertical = 6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            if (picture != null) {
+                icon?.let { Image(it, contentDescription = null, modifier = Modifier.padding(end = 6.dp).size(20.dp)) }
+            }
+            Text(
+                label,
+                style = MaterialTheme.typography.titleSmall,
+                color = Color.White,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
     }
 }
 

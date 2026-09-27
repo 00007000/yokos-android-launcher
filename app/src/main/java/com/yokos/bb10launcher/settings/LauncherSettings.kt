@@ -1,6 +1,7 @@
 package com.yokos.bb10launcher.settings
 
 import android.content.Context
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
@@ -66,6 +67,13 @@ class LauncherSettings(context: Context) {
         }
     }
 
+    /** Whether the peek service saves still pictures of apps for their Active Frames. */
+    val framePreviews: Flow<Boolean> = store.data.map { it[FRAME_PREVIEWS] ?: true }
+
+    suspend fun setFramePreviews(enabled: Boolean) {
+        store.edit { it[FRAME_PREVIEWS] = enabled }
+    }
+
     private companion object {
         val APP_ORDER = stringPreferencesKey("app_order")
         val CLOSED_FRAMES = stringSetPreferencesKey("closed_frames")
@@ -73,6 +81,7 @@ class LauncherSettings(context: Context) {
         val PEEK_EDGE = stringPreferencesKey("peek_edge")
         val PEEK_LENGTH = stringPreferencesKey("peek_length")
         val PEEK_POSITION = stringPreferencesKey("peek_position")
+        val FRAME_PREVIEWS = booleanPreferencesKey("frame_previews")
 
         inline fun <reified E : Enum<E>> enumOrDefault(name: String?, default: E): E =
             enumValues<E>().firstOrNull { it.name == name } ?: default

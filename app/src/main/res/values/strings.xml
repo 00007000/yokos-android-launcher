@@ -73,6 +73,8 @@
     <string name="setup_accessibility_desc">Turn on “BB10 Peek” to swipe in from the screen edge and peek at the Hub from any app.</string>
     <string name="setup_restricted">Android 13 and newer block these settings for sideloaded apps. If a switch is greyed out, open App info, tap ⋮ and choose “Allow restricted settings”.</string>
     <string name="setup_open_app_info">Open App info</string>
+    <string name="frame_previews">Active Frame previews</string>
+    <string name="frame_previews_desc">Saves a small picture of each app while you use it, so its frame shows where you left off. Needs Peek gesture and Android 11 or newer. Pictures stay on this phone; turning this off deletes them.</string>
     <string name="peek_settings">Peek strip</string>
     <string name="peek_edge">Edge</string>
     <string name="peek_left">Left</string>
@@ -88,5 +90,5 @@
 
     <!-- Accessibility service -->
     <string name="peek_service_label">BB10 Peek</string>
-    <string name="peek_service_description">Draws a thin strip on one screen edge. Swipe in from it to peek at the BB10 Hub from any app. BB10 Peek does not read what is on your screen.</string>
+    <string name="peek_service_description">Draws a thin strip on one screen edge. Swipe in from it to peek at the BB10 Hub from any app. On Android 11 and newer it also saves a small picture of the app you are using so its Active Frame can show a preview. Pictures stay on this phone and can be turned off in the launcher’s setup. BB10 Peek never reads the text or buttons of other apps.</string>
 </resources>

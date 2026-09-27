@@ -82,6 +82,7 @@ fun LauncherRoot(commands: Flow<HomeCommand>, viewModel: LauncherViewModel) {
     val frames by viewModel.frames.collectAsStateWithLifecycle()
     val widgetIds by viewModel.widgetFrames.collectAsStateWithLifecycle()
     val peekConfig by viewModel.peekConfig.collectAsStateWithLifecycle()
+    val framePreviews by viewModel.framePreviews.collectAsStateWithLifecycle()
     val labels = remember(apps) { apps.associate { it.packageName to it.label } }
     val appPages = remember(apps) { AppOrdering.pages(apps) }
     val pagerState = rememberPagerState(initialPage = FRAMES_PAGE) { FIRST_APP_PAGE + appPages.size }
@@ -204,6 +205,8 @@ fun LauncherRoot(commands: Flow<HomeCommand>, viewModel: LauncherViewModel) {
             status = setup,
             peekConfig = peekConfig,
             onPeekConfigChange = viewModel::setPeekConfig,
+            framePreviews = framePreviews,
+            onFramePreviewsChange = viewModel::setFramePreviews,
             onClose = { setupOpen = false },
         )
     }

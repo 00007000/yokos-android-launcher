@@ -8,7 +8,7 @@ A BlackBerry 10–style home launcher for Android 9+ (API 28–34), written in K
 |---|---|
 | **Hub**: one stream for every app's messages | A `NotificationListenerService` records every notification in an on-device history (SQLite), so entries stay after they leave the status bar and across restarts, and each new message in a conversation gets its own entry. The Hub page has an account rail with unread badges, day-grouped entries with category colour stripes, swipe to delete, and a long-press sheet with inline reply, mark read/unread, snooze (15 min / 1 h / 4 h) and delete. History keeps 90 days (up to 5,000 cleared entries); *Clear history* empties it. |
 | **Peek** into the Hub from any app | An accessibility service (`BB10 Peek`) draws a thin strip on one screen edge. Drag in from it to slide the Hub over the current app. Let go past 40% (or flick) to open the full Hub. |
-| **Active Frames** | The last 8 apps you used, from `UsageStatsManager`, as tinted cards with a close button. You can also pin any app widget as a live frame. |
+| **Active Frames** | The last 8 apps you used, from `UsageStatsManager`, each showing a still picture of where you left off (Android 11+, taken by the BB10 Peek service while the app is open; off switch in setup) with a close button. You can also pin any app widget as a live frame. |
 | **App grid pages** | 4×6 pages from `LauncherApps` (work profile included). Long-press and drag to rearrange, tap in rearrange mode for App info / Uninstall. |
 | **Home layout** | Swipe between Hub ← Active Frames ← app pages. Home returns to Active Frames. Bottom bar: Phone · Search · Camera. Search covers apps and Hub entries on the phone, with a Google search on top (the keyboard's search key goes to Google). Swipe down on the app grid to open notifications. |
 | **Look** | Black and dark-grey surfaces with the BB10 blue accent. The font is Source Sans 3 (SIL OFL) in place of Slate Pro, which can't be redistributed. |
@@ -18,7 +18,7 @@ A BlackBerry 10–style home launcher for Android 9+ (API 28–34), written in K
 - The Hub history starts when you grant notification access. Android doesn't give other apps its own notification history, so anything from before then (other than what's still in the status bar) can't be imported.
 - Reply and snooze only work while the notification is still in the status bar. Older entries open the app instead.
 
-- Active Frames can't mirror other apps' live screens. Android offers no way to do that without screen capture, so app frames show the icon and last-used time, and widgets serve as live frames.
+- Active Frames can't mirror other apps' live screens. App frames show a still picture instead, refreshed every few seconds while the app is open, which needs the BB10 Peek accessibility service and Android 11+. Without it they show the app icon. Protected screens (banking apps and the like) come out black and are skipped. Pictures stay in the launcher's cache on the phone. Widgets serve as live frames.
 - Closing a frame only hides it until you use the app again. Launchers can't stop other apps.
 - With gesture navigation, the side edges belong to Back. The peek strip asks to be excluded, but Android only grants that for up to 200dp per edge. Keep the strip short (Third or Half), or use 3-button navigation.
 - **Android 13+ sideloaded APKs:** notification access and accessibility are "restricted settings". If a switch is greyed out, open *App info → ⋮ → Allow restricted settings* first.

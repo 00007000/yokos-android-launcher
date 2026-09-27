@@ -26,6 +26,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -48,6 +49,8 @@ fun SetupScreen(
     status: SetupStatus,
     peekConfig: PeekConfig,
     onPeekConfigChange: (PeekConfig) -> Unit,
+    framePreviews: Boolean,
+    onFramePreviewsChange: (Boolean) -> Unit,
     onClose: () -> Unit,
 ) {
     val context = LocalContext.current
@@ -99,6 +102,23 @@ fun SetupScreen(
             onGrant = { open(Permissions.accessibilityIntent()) },
         )
         PeekSettings(peekConfig, onPeekConfigChange)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            Row(
+                Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                Column(Modifier.weight(1f)) {
+                    Text(stringResource(R.string.frame_previews), style = MaterialTheme.typography.titleMedium)
+                    Text(
+                        stringResource(R.string.frame_previews_desc),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Bb10Colors.TextDim,
+                    )
+                }
+                Switch(checked = framePreviews, onCheckedChange = onFramePreviewsChange)
+            }
+        }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             HorizontalDivider(color = Bb10Colors.Divider, modifier = Modifier.padding(top = 8.dp))
             Text(

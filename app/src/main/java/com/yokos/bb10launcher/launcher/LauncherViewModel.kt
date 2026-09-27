@@ -50,6 +50,16 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         viewModelScope.launch { settings.setPeekConfig(config) }
     }
 
+    val framePreviews: StateFlow<Boolean> =
+        settings.framePreviews.stateIn(viewModelScope, SharingStarted.Eagerly, true)
+
+    fun setFramePreviews(enabled: Boolean) {
+        viewModelScope.launch {
+            settings.setFramePreviews(enabled)
+            if (!enabled) withContext(Dispatchers.IO) { launcher.framePreviews.deleteAll() }
+        }
+    }
+
     val widgetFrames: StateFlow<List<Int>> =
         settings.widgetFrames.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 

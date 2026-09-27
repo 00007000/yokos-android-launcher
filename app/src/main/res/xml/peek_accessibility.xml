@@ -1,10 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Only window changes are needed, to hide the strip over the launcher. No screen content is read. -->
+<!-- Window changes hide the strip over the launcher and tell which app is open. The text and controls
+     of other apps are never read; on Android 11+ a small picture of the open app is saved for its
+     Active Frame (canTakeScreenshot), unless turned off in the launcher's setup. -->
 <accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
     android:accessibilityEventTypes="typeWindowStateChanged"
     android:accessibilityFeedbackType="feedbackGeneric"
     android:accessibilityFlags="flagDefault"
     android:canRetrieveWindowContent="false"
+    android:canTakeScreenshot="true"
     android:description="@string/peek_service_description"
     android:isAccessibilityTool="false"
     android:notificationTimeout="100" />

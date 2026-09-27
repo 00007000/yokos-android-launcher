@@ -3,6 +3,7 @@ package com.yokos.bb10launcher
 import android.app.Application
 import android.content.Context
 import com.yokos.bb10launcher.apps.AppRepository
+import com.yokos.bb10launcher.frames.FramePreviews
 import com.yokos.bb10launcher.frames.FrameWidgetHost
 import com.yokos.bb10launcher.frames.RecentAppsSource
 import com.yokos.bb10launcher.hub.HubRepository
@@ -22,6 +23,7 @@ class LauncherApp : Application() {
     val hub by lazy { HubRepository(SqliteHubStore(this), openApp = { apps.launchPackage(it) }) }
     val recentApps by lazy { RecentAppsSource(this) }
     val widgets by lazy { FrameWidgetHost(this) }
+    val framePreviews by lazy { FramePreviews(this) }
 }
 
 val Context.launcherApp: LauncherApp

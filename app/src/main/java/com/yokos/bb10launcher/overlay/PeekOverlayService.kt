@@ -46,7 +46,8 @@ import kotlin.math.roundToInt
  * slides a compact Hub over the current app, and releasing far enough opens the full Hub.
  *
  * It only listens for window changes (to hide itself over the launcher and the lock screen) and
- * never reads screen content.
+ * never reads the text or controls of other apps. On Android 11+ it also saves a small picture
+ * of the app on screen for its Active Frame, unless the user turns that off.
  */
 class PeekOverlayService : AccessibilityService() {
     private lateinit var windowManager: WindowManager
@@ -62,6 +63,8 @@ class PeekOverlayService : AccessibilityService() {
     private var overLauncher = false
     private var immersive = false
     private var screenOff = false
+    private var previewsEnabled = true
+    private var capturer: FrameCapturer? = null
 
     /** Screen off / unlock: the lock screen doesn't always report a window change. */
     private val screenReceiver = object : BroadcastReceiver() {
@@ -69,6 +72,7 @@ class PeekOverlayService : AccessibilityService() {
             when (intent.action) {
                 Intent.ACTION_SCREEN_OFF -> {
                     screenOff = true
+                    capturer?.stop()
                     animator?.cancel()
                     removePanel()
                 }
@@ -95,6 +99,20 @@ class PeekOverlayService : AccessibilityService() {
                 layoutStrip()
             }
         }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            capturer = FrameCapturer(
+                service = this,
+                previews = launcherApp.framePreviews,
+                isLaunchable = { it in launcherApp.apps.launchablePackages() },
+                canCapture = { previewsEnabled && panel == null && !overLauncher && !isLocked() },
+            )
+            scope.launch {
+                launcherApp.settings.framePreviews.collect { enabled ->
+                    previewsEnabled = enabled
+                    if (!enabled) capturer?.stop()
+                }
+            }
+        }
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent) {
@@ -103,12 +121,19 @@ class PeekOverlayService : AccessibilityService() {
         // System UI (shade, lock screen) doesn't count as leaving the current app.
         if (pkg != SYSTEM_UI) overLauncher = pkg == packageName
         updateStripVisibility()
+        when {
+            // Don't picture the shade or the lock screen as part of an app.
+            pkg == SYSTEM_UI -> capturer?.stop()
+            // Dialogs and the keyboard sit on top of the same app; only full-screen windows switch apps.
+            event.isFullScreen -> capturer?.onForeground(pkg.takeIf { it != packageName && previewsEnabled })
+        }
     }
 
     override fun onInterrupt() = Unit
 
     override fun onDestroy() {
         if (instance === this) instance = null
+        capturer?.release()
         runCatching { unregisterReceiver(screenReceiver) }
         animator?.cancel()
         removePanel()
